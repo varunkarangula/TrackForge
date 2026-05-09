@@ -75,7 +75,5 @@ TrackForge is a unified personal productivity and finance web application built 
 - **Backend**: The Express application is structured in `routes`, `controllers`, and `services` layers for clean business logic separation.
 - **Frontend**: The React application uses `AuthContext` to manage the session state globally. A custom Axios instance with an interceptor automatically attaches the JWT token to every outgoing request.
 
-## License
-
-MIT License
+```mongod --dbpath ~/mongodb-data```
 
