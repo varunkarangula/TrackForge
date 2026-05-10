@@ -78,5 +78,3 @@ TrackForge is a unified personal productivity and finance web application built 
 ## License
 
 MIT License
-
-mongod --dbpath ~/mongodb-data

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext.jsx';
 import {
@@ -21,7 +20,7 @@ const Header = () => {
         <nav className="hidden md:flex items-center gap-6 text-sm text-zinc-500 dark:text-zinc-400">
           <a href="#features" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">Features</a>
           <a href="#how-it-works" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">How it works</a>
-          <a href="#about" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">About</a>
+          <a href="https://github.com/sathvik9105/TrackForge" target="_blank" rel="noopener noreferrer" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">GitHub</a>
         </nav>
 
         <div className="flex items-center gap-2">
@@ -64,7 +63,7 @@ const Footer = () => (
           <ul className="space-y-2 text-sm text-zinc-500 dark:text-zinc-400">
             <li><a href="#features" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">Features</a></li>
             <li><a href="#how-it-works" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">How it works</a></li>
-            <li><Link to="/register" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">Get started</Link></li>
+            <li><a href="https://github.com/sathvik9105/TrackForge" target="_blank" rel="noopener noreferrer" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">GitHub</a></li>
           </ul>
         </div>
         <div>
@@ -111,19 +110,18 @@ const LandingPage = () => (
     <Header />
 
     {/* Hero */}
-    <section className="flex-1 flex flex-col items-center justify-center text-center px-6 py-24 md:py-32 relative overflow-hidden">
+    <section className="flex-1 flex flex-col items-center pt-16 pb-24 md:pt-20 md:pb-32 text-center px-6 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accentGreen/5 dark:from-primary/10 dark:to-accentGreen/10 pointer-events-none" />
       <div className="relative max-w-3xl space-y-6 animate-fade-in">
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-primary/30 bg-primary/5 dark:bg-primary/10 text-primary text-xs font-medium">
-          <Zap className="w-3 h-3" /> Personal Finance & Productivity Tool
+          <Zap className="w-3 h-3" /> Productivity Meets Financial Clarity
         </span>
         <h1 className="text-4xl md:text-6xl font-bold text-zinc-900 dark:text-zinc-100 leading-tight tracking-tight">
           Track expenses.<br />Manage tasks.<br />
           <span className="text-primary">One workspace.</span>
         </h1>
         <p className="text-lg text-zinc-500 dark:text-zinc-400 max-w-xl mx-auto leading-relaxed">
-          Productivity Meets Financial Clarity 
-          TrackForge combines a powerful expense tracker and schedule manager into one clean, distraction-free dashboard. 
+          TrackForge combines a powerful expense tracker and schedule manager into one clean, unified, and distraction-free dashboard. 
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
           <Link to="/register" className="btn-primary px-6 py-2.5 text-sm">
@@ -223,7 +221,7 @@ const LandingPage = () => (
       <div className="max-w-2xl mx-auto text-center space-y-5">
         <h2 className="text-3xl font-bold text-white dark:text-zinc-900">Ready to take control?</h2>
         <p className="text-zinc-400 dark:text-zinc-600 text-sm leading-relaxed">
-          Join TrackForge today and start managing your finances and tasks from one beautiful, minimal workspace.
+          Join TrackForge today and start managing your finances and tasks from one beautiful, minimal and unified workspace.
         </p>
         <Link to="/register" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-sm font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition-all">
           Get started for free <ArrowRight className="w-4 h-4" />

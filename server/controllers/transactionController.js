@@ -38,7 +38,7 @@ const deleteTransaction = async (req, res) => {
 
 const getTransactionSummary = async (req, res) => {
   try {
-    const summary = await transactionService.getTransactionSummary(req.user._id);
+    const summary = await transactionService.getTransactionSummary(req.user._id, req.query.month);
     res.json(summary);
   } catch (error) {
     res.status(500).json({ message: error.message });

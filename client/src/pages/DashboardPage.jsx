@@ -102,6 +102,34 @@ const DashboardPage = () => {
   const [events, setEvents] = useState([]);
   const [subscriptions, setSubscriptions] = useState([]);
 
+  const getLast6Months = () => {
+    const months = [];
+    for (let i = 0; i < 6; i++) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      months.push({ label: d.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }), value: `${year}-${month}` });
+    }
+    return months;
+  };
+  const availableMonths = getLast6Months();
+
+  const [selectedMonth, setSelectedMonth] = useState(availableMonths[0].value);
+  const [monthSummary, setMonthSummary] = useState(null);
+
+  useEffect(() => {
+    const fetchMonthSummary = async () => {
+      try {
+        const res = await axiosInstance.get('/transactions/summary', { params: { month: selectedMonth } });
+        setMonthSummary(res.data);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchMonthSummary();
+  }, [selectedMonth]);
+
   useEffect(() => {
     const load = async () => {
       try {
@@ -136,12 +164,12 @@ const DashboardPage = () => {
 
   // Tasks due today or tomorrow (not completed)
   const taskReminders = tasks
-    .filter(t => t.status !== 'Completed' && t.dueDate)
+    .filter(t => t.status !== 'Completed' && t.endDate)
     .filter(t => {
-      const d = toLocalDate(t.dueDate);
+      const d = toLocalDate(t.endDate);
       return isSameDay(d, today) || isSameDay(d, tomorrow);
     })
-    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+    .sort((a, b) => new Date(a.endDate) - new Date(b.endDate));
 
   // Events happening today or tomorrow
   const eventReminders = events
@@ -165,9 +193,9 @@ const DashboardPage = () => {
   const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const threeDaysFromNow = new Date(startOfToday.getTime() + 3 * 24 * 60 * 60 * 1000);
   const dueSoon = tasks.filter(t =>
-    t.status !== 'Completed' && t.dueDate &&
-    toLocalDate(t.dueDate) >= startOfToday &&
-    toLocalDate(t.dueDate) <= threeDaysFromNow
+    t.status !== 'Completed' && t.endDate &&
+    toLocalDate(t.endDate) >= startOfToday &&
+    toLocalDate(t.endDate) <= threeDaysFromNow
   ).length;
 
   return (
@@ -183,7 +211,7 @@ const DashboardPage = () => {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {taskReminders.map(t => {
-              const isToday = isSameDay(toLocalDate(t.dueDate), today);
+              const isToday = isSameDay(toLocalDate(t.endDate), today);
               return (
                 <ReminderItem
                   key={t._id}
@@ -232,7 +260,7 @@ const DashboardPage = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard icon={Wallet} title="Total Expenses" value={`₹${(summary?.totalExpense || 0).toLocaleString('en-IN')}`} subtitle="This month" iconBg="bg-red-100 dark:bg-red-950/40 text-red-500" />
         <StatCard icon={TrendingUp} title="Total Income" value={`₹${(summary?.totalIncome || 0).toLocaleString('en-IN')}`} subtitle="This month" iconBg="bg-emerald-100 dark:bg-emerald-950/40 text-emerald-500" />
-        <StatCard icon={CheckSquare} title="Tasks Done" value={`${completedTasks} / ${totalTasks}`} subtitle="Completion rate" iconBg="bg-indigo-100 dark:bg-indigo-950/40 text-indigo-500" />
+        <StatCard icon={CheckSquare} title="Tasks Done" value={`${completedTasks} / ${totalTasks}`} subtitle={totalTasks > 0 ? `Completion rate: ${Math.round((completedTasks / totalTasks) * 100)}%` : 'No tasks yet'} iconBg="bg-indigo-100 dark:bg-indigo-950/40 text-indigo-500" />
         <StatCard icon={Calendar} title="Due Soon" value={dueSoon} subtitle="Within 3 days" iconBg="bg-amber-100 dark:bg-amber-950/40 text-amber-500" />
       </div>
 
@@ -301,6 +329,46 @@ const DashboardPage = () => {
               </div>
             ))}
           </div>
+
+          {/* Selected month pie charts */}
+          <div className="card p-5 mt-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+              <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Monthly Breakdown</h3>
+              <select 
+                className="input py-1.5 text-xs w-full sm:w-auto" 
+                value={selectedMonth} 
+                onChange={e => setSelectedMonth(e.target.value)}
+              >
+                {availableMonths.map(m => (
+                  <option key={m.value} value={m.value}>{m.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              {[
+                { title: 'Expenses', data: monthSummary?.expenseBreakdown, fallback: '#EF4444' },
+                { title: 'Income',   data: monthSummary?.incomeBreakdown,  fallback: '#22C55E' },
+              ].map(({ title, data, fallback }) => (
+                <div key={title} className="bg-zinc-50 dark:bg-zinc-800/30 rounded-xl p-4 border border-zinc-100 dark:border-zinc-800/50">
+                  <h4 className="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2 text-center">{title}</h4>
+                  <div className="h-40">
+                    {data?.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={data} cx="50%" cy="50%" innerRadius={35} outerRadius={55} paddingAngle={3} dataKey="total" nameKey="name">
+                            {data.map((e, i) => <Cell key={i} fill={e.color || fallback} />)}
+                          </Pie>
+                          <Tooltip formatter={v => `₹${Number(v).toLocaleString('en-IN')}`} contentStyle={{ fontSize: '12px' }} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-xs text-zinc-400">No data</div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* ── Right col ── */}
@@ -364,11 +432,11 @@ const DashboardPage = () => {
             {(() => {
               const upcoming = tasks
                 .filter(t =>
-                  t.status !== 'Completed' && t.dueDate &&
-                  toLocalDate(t.dueDate) >= startOfToday &&
-                  toLocalDate(t.dueDate) <= threeDaysFromNow
+                  t.status !== 'Completed' && t.endDate &&
+                  toLocalDate(t.endDate) >= startOfToday &&
+                  toLocalDate(t.endDate) <= threeDaysFromNow
                 )
-                .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+                .sort((a, b) => new Date(a.endDate) - new Date(b.endDate))
                 .slice(0, 3);
               return upcoming.length > 0 ? (
                 <div className="space-y-2">
@@ -378,7 +446,7 @@ const DashboardPage = () => {
                       <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200 truncate">{task.title}</p>
                       <div className="flex items-center justify-between mt-1">
                         <span className="text-xs text-zinc-400">
-                          {isSameDay(toLocalDate(task.dueDate), today) ? '🔴 Due Today' : isSameDay(toLocalDate(task.dueDate), tomorrow) ? '🟡 Due Tomorrow' : `Due ${new Date(task.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`}
+                          {isSameDay(toLocalDate(task.endDate), today) ? '🔴 Due Today' : isSameDay(toLocalDate(task.endDate), tomorrow) ? '🟡 Due Tomorrow' : `Due ${new Date(task.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`}
                         </span>
                         <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${PRIORITY_BADGE[task.priority]}`}>{task.priority}</span>
                       </div>

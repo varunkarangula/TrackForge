@@ -13,7 +13,10 @@ const app = express();
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  credentials: true,
+}));
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes.js'));
@@ -25,11 +28,11 @@ app.use('/api/tasks', require('./routes/taskRoutes.js'));
 app.use('/api/events', require('./routes/eventRoutes.js'));
 app.use('/api/subscriptions', require('./routes/subscriptionRoutes.js'));
 
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
   res.send('API is running...');
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 app.listen(PORT, () => {
   console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);

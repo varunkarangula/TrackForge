@@ -88,24 +88,20 @@ const deleteTransaction = async (userId, transactionId) => {
   return transactionId;
 };
 
-const getTransactionSummary = async (userId) => {
-  const startOfMonth = new Date();
-  startOfMonth.setDate(1);
-  startOfMonth.setHours(0, 0, 0, 0);
+const getTransactionSummary = async (userId, monthStr) => {
+  let startOfMonth, endOfMonth;
+  if (monthStr) {
+    const [year, month] = monthStr.split('-');
+    startOfMonth = new Date(year, parseInt(month) - 1, 1);
+    endOfMonth = new Date(year, parseInt(month), 0, 23, 59, 59, 999);
+  } else {
+    startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+    endOfMonth = new Date(startOfMonth);
+    endOfMonth.setMonth(startOfMonth.getMonth() + 1);
+  }
 
-  const endOfMonth = new Date(startOfMonth);
-  endOfMonth.setMonth(startOfMonth.getMonth() + 1);
-
-  // Group by type and category
-  const aggregation = await Transaction.aggregate([
-    { $match: { user: userId, datetime: { $gte: startOfMonth, $lt: endOfMonth } } },
-    { $group: {
-      _id: { type: '$type', category: '$category' },
-      total: { $sum: '$amount' }
-    }}
-  ]);
-
-  // We need to populate categories after aggregate, or do a lookup. We can lookup.
   const populatedAggregation = await Transaction.aggregate([
     { $match: { user: new mongoose.Types.ObjectId(userId), datetime: { $gte: startOfMonth, $lt: endOfMonth } } },
     { $group: {

@@ -23,6 +23,14 @@ const toLocalDate = (iso) => {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 };
 
+const isDateBetween = (date, startStr, endStr) => {
+  if (!startStr || !endStr) return false;
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  const start = toLocalDate(startStr).getTime();
+  const end = toLocalDate(endStr).getTime();
+  return d >= start && d <= end;
+};
+
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const PRIORITY = {
@@ -52,8 +60,11 @@ const TaskForm = ({ initial, prefillDate, onSave }) => {
     title: initial?.title || '',
     description: initial?.description || '',
     priority: initial?.priority || 'Medium',
-    dueDate: initial?.dueDate
-      ? new Date(initial.dueDate).toISOString().split('T')[0]
+    startDate: initial?.startDate
+      ? new Date(initial.startDate).toISOString().split('T')[0]
+      : prefillDate?.toISOString().split('T')[0] || '',
+    endDate: initial?.endDate
+      ? new Date(initial.endDate).toISOString().split('T')[0]
       : prefillDate?.toISOString().split('T')[0] || '',
     tags: initial?.tags?.join(', ') || '',
   });
@@ -67,14 +78,15 @@ const TaskForm = ({ initial, prefillDate, onSave }) => {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div><label className="label">Title</label><input className="input" required value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} /></div>
       <div><label className="label">Description</label><textarea className="input resize-none" rows={2} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <div>
           <label className="label">Priority</label>
           <select className="input" value={form.priority} onChange={e => setForm({ ...form, priority: e.target.value })}>
             <option>Low</option><option>Medium</option><option>High</option>
           </select>
         </div>
-        <div><label className="label">Deadline</label><input type="date" className="input" required value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })} /></div>
+        <div><label className="label">Start Date</label><input type="date" className="input" required value={form.startDate} onChange={e => setForm({ ...form, startDate: e.target.value })} /></div>
+        <div><label className="label">End Date</label><input type="date" className="input" required value={form.endDate} onChange={e => setForm({ ...form, endDate: e.target.value })} /></div>
       </div>
       <div><label className="label">Tags <span className="normal-case font-normal text-zinc-400">(comma-separated)</span></label><input className="input" placeholder="work, personal" value={form.tags} onChange={e => setForm({ ...form, tags: e.target.value })} /></div>
       <button type="submit" className="w-full btn-primary justify-center py-2">Save Task</button>
@@ -239,14 +251,14 @@ const TaskPage = () => {
 
   const hasDot = (day) => {
     const d = new Date(viewYear, viewMonth, day);
-    const hasTasks  = tasks.some(t => t.dueDate && isSameDay(toLocalDate(t.dueDate), d));
+    const hasTasks  = tasks.some(t => t.startDate && t.endDate && isDateBetween(d, t.startDate, t.endDate));
     const hasEvents = events.some(e => isSameDay(toLocalDate(e.date), d));
     const hasSubs   = subscriptions.some(s => s.dayOfMonth === day);
     return { hasTasks, hasEvents, hasSubs };
   };
 
   /* ── Selected day items ── */
-  const dayTasks = tasks.filter(t => t.dueDate && isSameDay(toLocalDate(t.dueDate), selectedDate));
+  const dayTasks = tasks.filter(t => t.startDate && t.endDate && isDateBetween(selectedDate, t.startDate, t.endDate));
   const dayEvents = events.filter(e => isSameDay(toLocalDate(e.date), selectedDate)).sort((a, b) => a.startTime.localeCompare(b.startTime));
   const daySubs = subscriptions.filter(s => s.dayOfMonth === selectedDate.getDate());
 
@@ -416,6 +428,7 @@ const TaskPage = () => {
                   </div>
                 );
               })}
+
             </div>
 
             {/* Events column */}
@@ -448,6 +461,7 @@ const TaskPage = () => {
                   </div>
                 </div>
               ))}
+
             </div>
 
             {/* Subscriptions column */}
