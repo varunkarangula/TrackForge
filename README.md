@@ -26,7 +26,7 @@ TrackForge is a unified personal productivity and finance web application built 
 1. **Clone the repository**
 
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/sathvik9105/TrackForge.git
    cd trackforge
    ```
 
